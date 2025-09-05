@@ -14,6 +14,7 @@ import logging
 import threading
 import streamlit.components.v1 as components
 from io import BytesIO
+import pickle
 
 
 # Set up logging
@@ -745,7 +746,7 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
             exams_timetabled[exam] = (d, s, assigned_rooms)
 
         # Save data for next page
-        st.session_state["exam_data"] = {
+        data_to_save ={
             "days": days,
             "slots": [0, 1],
             "exams": exams,
@@ -760,8 +761,11 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
             "rooms": rooms,
             "exam_types": exam_types,
         }
+        pickle_buffer = BytesIO()
+        pickle.dump(data_to_save, pickle_buffer)
+        pickle_buffer.seek(0)
         total_penalty = sum(solver.Value(v) for v in spread_penalties + soft_day_penalties + room_surplus +extra_time_25_penalties)
-        return exams_timetabled, days, exam_counts, exam_types,total_penalty
+        return exams_timetabled, days, exam_counts, exam_types,total_penalty, pickle_buffer
     
     elif status == cp_model.INFEASIBLE:
         # print infeasible boolean variables index
@@ -1117,9 +1121,9 @@ if st.button("Generate Timetable"):
             error_msg = None
             output = None
             def generate():
-                global processing_done, error_msg, students_df, leaders_df, penalties, output
+                global processing_done, error_msg, students_df, leaders_df, penalties, output, pickle_buffer
                 try:
-                    timetable, days, exam_counts, exam_types, penalties = create_timetable(
+                    timetable, days, exam_counts, exam_types, penalties, pickle_buffer = create_timetable(
                         students_df, leaders_df, wb, max_exams_2days, max_exams_5days,
                     )
                     output = generate_excel(timetable, days, exam_counts, exam_types)
@@ -1143,6 +1147,9 @@ if st.button("Generate Timetable"):
                 st.error(f"An error occurred: {error_msg}")
                 logger.error(f"Error generating timetable: {error_msg}", exc_info=True)
             else:
+                pickle_buffer.seek(0)
+                data = pickle.load(pickle_buffer)
+                st.session_state["exam_data"] = data
                 st.success("✅ Timetable generated successfully!")
                 st.write(f"Total Penalty: {penalties}")
                 st.download_button(
@@ -1151,6 +1158,7 @@ if st.button("Generate Timetable"):
                     file_name="exam_schedule.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
+                st.write("Current session_state keys:", list(st.session_state.keys()))
                 st.header("Generated Timetable")
                 df = pd.read_excel(output)
                 st.dataframe(df)

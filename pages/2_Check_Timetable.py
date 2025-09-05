@@ -279,11 +279,14 @@ def file_checking(exams_timetabled, Fixed_modules, Core_modules, student_exams, 
 uploaded_file = st.file_uploader("Upload a file to check", type=["xlsx", "csv"])
 
 if st.button("🔍 Check Files"):
-    st.header("🔍 Check Your Files")
+
     if uploaded_file is not None:
+        st.header("🔍 Check Your Files")
         try:
             st.write("✅ File uploaded successfully!")
             exams_timetabled = file_reading(uploaded_file, days, slots)
             file_checking(exams_timetabled, Fixed_modules, Core_modules, student_exams, leader_courses, extra_time_students_50, exams, AEA,exam_counts)
         except Exception as e:
             st.error(f"Error reading file: {e}") 
+    else:
+        st.error("Please upload a file before checking.")
