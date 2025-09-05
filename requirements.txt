@@ -1,0 +1,6 @@
+streamlit
+pandas
+ortools
+rapidfuzz
+openpyxl
+python-dateutil

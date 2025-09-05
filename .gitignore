@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Jupyter / Spyder / VSCode
+.ipynb_checkpoints
+.spyderproject
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db

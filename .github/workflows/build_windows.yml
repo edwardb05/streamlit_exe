@@ -1,0 +1,31 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:   # lets you trigger it manually from GitHub
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt pyinstaller
+
+    - name: Build EXE
+      run: pyinstaller --onefile --add-data "Home_Page.py;." --add-data "pages;pages" --add-data ".streamlit;.streamlit" --collect-all streamlit --collect-all pandas --collect-all ortools --collect-all rapidfuzz --collect-all openpyxl launcher.py
+    
+
+
+    - name: Upload EXE
+      uses: actions/upload-artifact@v4
+      with:
+        name: streamlit-exe
+        path: dist/launcher.exe
