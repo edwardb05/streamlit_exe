@@ -731,6 +731,7 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
    
     #### ----- Solve the model ----- ###
     solver = cp_model.CpSolver()
+    # set max time
     solver.parameters.max_time_in_seconds = 120 
     status = solver.Solve(model)
     if status == cp_model.FEASIBLE or status == cp_model.OPTIMAL:
@@ -745,7 +746,7 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
                 leader = "unknown"
             exams_timetabled[exam] = (d, s, assigned_rooms)
 
-        # Save data for next page
+        # Save data for next page to pickle - unpacked when generation finished and in main scope
         data_to_save ={
             "days": days,
             "slots": [0, 1],
@@ -870,7 +871,7 @@ def generate_excel(exams_timetabled, days, exam_counts, exam_types):
                 pass
         ws.column_dimensions[col_letter].width = max_length + 2
 
-    # ------------ SAVE workbook to BytesIO and provide download ------------
+    # ------------ SAVE workbook to BytesIO(temporary storage) ------------
     output = BytesIO()
     wb.save(output)
     output.seek(0)
@@ -1149,6 +1150,7 @@ if st.button("Generate Timetable"):
             else:
                 pickle_buffer.seek(0)
                 data = pickle.load(pickle_buffer)
+                #Unpack the data from the temporary pickle file and write it to session state to carry across pages
                 st.session_state["exam_data"] = data
                 st.success("✅ Timetable generated successfully!")
                 st.write(f"Total Penalty: {penalties}")
@@ -1158,7 +1160,6 @@ if st.button("Generate Timetable"):
                     file_name="exam_schedule.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-                st.write("Current session_state keys:", list(st.session_state.keys()))
                 st.header("Generated Timetable")
                 df = pd.read_excel(output)
                 st.dataframe(df)
