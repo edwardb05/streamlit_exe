@@ -503,8 +503,8 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
             has_multiple_exams = model.NewBoolVar(f'{student}_more_than_one_exam_day_{day}')
             model.Add(num_exams >= 2).OnlyEnforceIf(has_multiple_exams)
             model.Add(num_exams < 2).OnlyEnforceIf(has_multiple_exams.Not())
-            penalty = model.NewIntVar(0, 1, f'{student}_penalty_day_{day}')
-            model.Add(penalty == 1).OnlyEnforceIf(has_multiple_exams)
+            penalty = model.NewIntVar(0, 5, f'{student}_penalty_day_{day}')
+            model.Add(penalty == 5).OnlyEnforceIf(has_multiple_exams)
             model.Add(penalty == 0).OnlyEnforceIf(has_multiple_exams.Not())
             extra_time_25_penalties.append(penalty)
 
@@ -555,8 +555,8 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
             model.Add(exam_slot[exam] != slot).OnlyEnforceIf(slot_match.Not())
             model.AddBoolAnd([day_match, slot_match]).OnlyEnforceIf(is_on_soft_day)
             model.AddBoolOr([day_match.Not(), slot_match.Not()]).OnlyEnforceIf(is_on_soft_day.Not())
-            penalty = model.NewIntVar(0, 10, f'{exam}_penalty_soft_day_{day}_{slot}')
-            model.Add(penalty == 10).OnlyEnforceIf(is_on_soft_day)
+            penalty = model.NewIntVar(0, 5, f'{exam}_penalty_soft_day_{day}_{slot}')
+            model.Add(penalty == 5).OnlyEnforceIf(is_on_soft_day)
             model.Add(penalty == 0).OnlyEnforceIf(is_on_soft_day.Not())
             soft_day_penalties.append(penalty)
 
@@ -599,12 +599,12 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
 
             #5 Apply penalties
             penalty_three = model.NewIntVar(0, 5, f'penalty_three_day{day}_slot{slot}')
-            penalty_four = model.NewIntVar(0, 100, f'penalty_four_day{day}_slot{slot}')
+            penalty_four = model.NewIntVar(0, 10, f'penalty_four_day{day}_slot{slot}')
 
             model.Add(penalty_three == 5).OnlyEnforceIf(is_three)
             model.Add(penalty_three == 0).OnlyEnforceIf(is_three.Not())
 
-            model.Add(penalty_four == 100).OnlyEnforceIf(is_four_or_more)
+            model.Add(penalty_four == 10).OnlyEnforceIf(is_four_or_more)
             model.Add(penalty_four == 0).OnlyEnforceIf(is_four_or_more.Not())
 
             soft_slot_penalties.append(penalty_three)
@@ -727,7 +727,7 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
                 #7 Add penality
                 non_pc_exam_penalty.append(5 * penalty_var)
             
-    model.Minimize(sum(spread_penalties*spread_penalty + soft_day_penalties*soft_day_penalty+   extra_time_25_penalties*extra_time_penalty+room_surplus*room_penalty+ soft_slot_penalties+ non_pc_exam_penalty))
+    model.Minimize(sum(spread_penalties + soft_day_penalties*soft_day_penalty+   extra_time_25_penalties*extra_time_penalty+room_surplus+ soft_slot_penalties*soft_slot_penalty+ non_pc_exam_penalty))
    
     #### ----- Solve the model ----- ###
     solver = cp_model.CpSolver()
@@ -1104,10 +1104,9 @@ with col1:
     max_exams_5days = st.number_input("Maximum Exams in 5-Day Window", min_value=1, max_value=10, value=4)
 
 with col2:
-    spread_penalty = st.slider("Module leaders exams spread out Penalty Weight", min_value=0, max_value=10, value=5)
-    room_penalty = st.slider("More than 2 rooms per exam Penalty Weight", min_value=0, max_value=10, value=5)
-    extra_time_penalty = st.slider(r"25% Extra Time Students having more than one exam a day Penalty Weight", min_value=0, max_value=10, value=5)
-    soft_day_penalty = st.slider("Soft constraint for no exams on certain days (Week 3 Tuesday and Wednesdnay Morning) Penalty Weight", min_value=0, max_value=10, value=5)
+    room_penalty = st.slider("Having non PC exams in computer room penalty weight", min_value=0, max_value=10, value=5)/5 #divide by 5 to normalize it 
+    extra_time_penalty = st.slider(r"25% Extra Time Students having more than one exam a day Penalty Weight", min_value=0, max_value=10, value=5)/5
+    soft_day_penalty = st.slider("Soft constraint for no exams on certain days (Week 3 Tuesday and Wednesdnay Morning) Penalty Weight", min_value=0, max_value=10, value=5)/5
 
 # Add a generate button
 if st.button("Generate Timetable"):
