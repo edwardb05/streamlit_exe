@@ -166,6 +166,7 @@ def validate_useful_dates(wb):
     return errors
 
 def process_files():
+    error = False
     """Process uploaded files and return processed data."""
     if not all([student_file, module_file, dates_file]):
         st.error("Please upload all required files")
@@ -207,7 +208,8 @@ def process_files():
                         if other_exam in student_exams[student]:
                             if exam != other_exam and Fixed_modules[exam][0] == Fixed_modules[other_exam][0]:
                                 st.error(f"Core module {exam} conflicts with fixed module {other_exam} on the same day for student {student} so model will be infeasible")
-        return student_df, module_df, dates_wb
+                                error = True
+        return student_df, module_df, dates_wb, error
     
     except Exception as e:
         st.error(f"Error processing files: {str(e)}")
@@ -727,7 +729,7 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
                 #7 Add penality
                 non_pc_exam_penalty.append(5 * penalty_var)
             
-    model.Minimize(sum(spread_penalties + soft_day_penalties*soft_day_penalty+   extra_time_25_penalties*extra_time_penalty+room_surplus+ soft_slot_penalties*soft_slot_penalty+ non_pc_exam_penalty))
+    model.Minimize(sum(spread_penalties) + sum(soft_day_penalties)*soft_day_penalty+   sum(extra_time_25_penalties)*extra_time_penalty+sum(room_surplus)+ sum(soft_slot_penalties)*soft_slot_penalty+ sum(non_pc_exam_penalty))
    
     #### ----- Solve the model ----- ###
     solver = cp_model.CpSolver()
@@ -1110,9 +1112,11 @@ with col2:
 
 # Add a generate button
 if st.button("Generate Timetable"):
-    students_df, leaders_df, wb = process_files()
+    students_df, leaders_df, wb, error = process_files()
     if not all([student_file, module_file, dates_file]):
         st.error("Please upload all required files first.")
+    elif error is True
+        st.error("Please ensure files are fixed before trying again.")
     else:
         try:
             animation_placeholder = st.empty()
