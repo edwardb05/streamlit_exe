@@ -167,7 +167,7 @@ def validate_useful_dates(wb):
 
 def process_files():
     error = False
-    """Process uploaded files and return processed data."""
+    #Process uploaded files and return processed data.
     if not all([student_file, module_file, dates_file]):
         st.error("Please upload all required files")
         return None, None, None
