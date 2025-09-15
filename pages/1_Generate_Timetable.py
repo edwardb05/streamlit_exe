@@ -729,7 +729,7 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
                 #7 Add penality
                 non_pc_exam_penalty.append(5 * penalty_var)
             
-    model.Minimize(sum(spread_penalties) + sum(soft_day_penalties)*soft_day_penalty+   sum(extra_time_25_penalties)*extra_time_penalty+sum(room_surplus)+ sum(soft_slot_penalties)*soft_slot_penalty+ sum(non_pc_exam_penalty))
+    model.Minimize(sum(spread_penalties) + sum(soft_day_penalties)*soft_day_penalty+   sum(extra_time_25_penalties)*extra_time_penalty+sum(room_surplus)+ sum(soft_slot_penalties)+ sum(non_pc_exam_penalty)*room_penalty)
    
     #### ----- Solve the model ----- ###
     solver = cp_model.CpSolver()
