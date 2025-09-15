@@ -1115,7 +1115,7 @@ if st.button("Generate Timetable"):
     students_df, leaders_df, wb, error = process_files()
     if not all([student_file, module_file, dates_file]):
         st.error("Please upload all required files first.")
-    elif error is True
+    elif error is True:
         st.error("Please ensure files are fixed before trying again.")
     else:
         try:
