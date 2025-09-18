@@ -176,6 +176,7 @@ def process_files():
         module_df = pd.read_excel(module_file, sheet_name=1, header=1)
         dates_wb = load_workbook(dates_file)
         student_errors = validate_student_list(student_df)
+        
         if student_errors:
             st.error("Student list errors:\n" + "\n".join(student_errors))
             return None, None, None
