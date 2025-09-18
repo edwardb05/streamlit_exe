@@ -1,11 +1,14 @@
-name: Build Windows EXE
+name: Build EXEs
 
 on:
-  workflow_dispatch:   # lets you trigger it manually from GitHub
+  workflow_dispatch:   # allows manual trigger
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]   # run on both Windows and macOS
+    runs-on: ${{ matrix.os }}
 
     steps:
     - name: Checkout repo
@@ -19,13 +22,34 @@ jobs:
     - name: Install dependencies
       run: pip install -r requirements.txt pyinstaller
 
-    - name: Build EXE
-      run: pyinstaller --onefile --add-data "Home_Page.py;." --add-data "pages;pages" --add-data ".streamlit;.streamlit" --collect-all streamlit --collect-all pandas --collect-all ortools --collect-all rapidfuzz --collect-all openpyxl launcher.py
-    
+    - name: Build executable
+      run: |
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          pyinstaller --onefile ^
+            --add-data "Home_Page.py;." ^
+            --add-data "pages;pages" ^
+            --add-data ".streamlit;.streamlit" ^
+            --collect-all streamlit ^
+            --collect-all pandas ^
+            --collect-all ortools ^
+            --collect-all rapidfuzz ^
+            --collect-all openpyxl ^
+            launcher.py
+        else
+          pyinstaller --onefile \
+            --add-data "Home_Page.py:." \
+            --add-data "pages:pages" \
+            --add-data ".streamlit:.streamlit" \
+            --collect-all streamlit \
+            --collect-all pandas \
+            --collect-all ortools \
+            --collect-all rapidfuzz \
+            --collect-all openpyxl \
+            launcher.py
+        fi
 
-
-    - name: Upload EXE
+    - name: Upload executable
       uses: actions/upload-artifact@v4
       with:
-        name: streamlit-exe
-        path: dist/launcher.exe
+        name: ${{ runner.os }}-exe
+        path: dist/launcher${{ runner.os == 'Windows' && '.exe' || '' }}
