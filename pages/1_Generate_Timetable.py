@@ -793,11 +793,11 @@ def generate_excel(exams_timetabled, days, exam_counts, exam_types):
     for d_idx, day_name in enumerate(days):
         for s_idx, slot_name in enumerate(['Morning', 'Afternoon']):
             exams_list = data.get(day_name, {}).get(s_idx, [])
-            if not exams_list:
+            if not exams_list: # No exams scheduled e.g. weekend
                 rows.append([day_name, slot_name, '', '', '', ''])
                 row_meta.append((d_idx, s_idx))
             else:
-                for exam_name, room in exams_list:
+                for exam_name, room in exams_list: #Get all data for the exams
                     room_str = ', '.join(room)
                     total_students = f'AEA {exam_counts[exam_name][0]}, Non-AEA {exam_counts[exam_name][1]}'
                     type_str = " (Computer)" if exam_types[exam_name] == "PC" else " (Standard)"
@@ -806,6 +806,7 @@ def generate_excel(exams_timetabled, days, exam_counts, exam_types):
                 rows.append([day_name, slot_name, '', '', '', ''])
                 row_meta.append((d_idx, s_idx))
 
+    # Create DataFrame
     df = pd.DataFrame(rows, columns=['Date', 'Time', 'Exam', 'Total No of Students', 'Room', 'Type'])
 
     # ------------ CREATE workbook and append rows ------------
@@ -818,7 +819,7 @@ def generate_excel(exams_timetabled, days, exam_counts, exam_types):
     def merge_vertical(col, key_fn):
         start = 2
         last_key = key_fn(start)
-        for r in range(3, ws.max_row + 2):
+        for r in range(3, ws.max_row + 2): #Start from row 3 as this is where data starts
             key = key_fn(r) if r <= ws.max_row else None
             if key != last_key:
                 if r - start > 1:
