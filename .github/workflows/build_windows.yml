@@ -1,55 +1,63 @@
 name: Build EXEs
 
 on:
-  workflow_dispatch:   # allows manual trigger
+  workflow_dispatch:  # manual trigger from GitHub Actions tab
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]   # run on both Windows and macOS
+        os: [windows-latest, macos-latest]  # build for both OSes
     runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
-    - name: Install dependencies
-      run: pip install -r requirements.txt pyinstaller
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
 
-    - name: Build executable
-      run: |
-        if [ "${{ runner.os }}" == "Windows" ]; then
-          pyinstaller --onefile ^
-            --add-data "Home_Page.py;." ^
-            --add-data "pages;pages" ^
-            --add-data ".streamlit;.streamlit" ^
-            --collect-all streamlit ^
-            --collect-all pandas ^
-            --collect-all ortools ^
-            --collect-all rapidfuzz ^
-            --collect-all openpyxl ^
-            launcher.py
-        else
-          pyinstaller --onefile \
-            --add-data "Home_Page.py:." \
-            --add-data "pages:pages" \
-            --add-data ".streamlit:.streamlit" \
-            --collect-all streamlit \
-            --collect-all pandas \
-            --collect-all ortools \
-            --collect-all rapidfuzz \
-            --collect-all openpyxl \
-            launcher.py
-        fi
+      - name: Build executable
+        shell: bash  # force Bash on both Windows and macOS
+        run: |
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            pyinstaller --onefile \
+              --add-data "Home_Page.py;." \
+              --add-data "pages;pages" \
+              --add-data ".streamlit;.streamlit" \
+              --collect-all streamlit \
+              --collect-all pandas \
+              --collect-all ortools \
+              --collect-all rapidfuzz \
+              --collect-all openpyxl \
+              launcher.py
+          else
+            pyinstaller --onefile \
+              --add-data "Home_Page.py:." \
+              --add-data "pages:pages" \
+              --add-data ".streamlit:.streamlit" \
+              --collect-all streamlit \
+              --collect-all pandas \
+              --collect-all ortools \
+              --collect-all rapidfuzz \
+              --collect-all openpyxl \
+              launcher.py
 
-    - name: Upload executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ runner.os }}-exe
-        path: dist/launcher${{ runner.os == 'Windows' && '.exe' || '' }}
+      - name: Upload executable
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: dist/launcher.exe
+
+      - name: Upload executable
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-exe
+          path: dist/launcher
