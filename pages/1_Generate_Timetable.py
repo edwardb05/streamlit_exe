@@ -237,7 +237,7 @@ def create_timetable(students_df, leaders_df, wb,max_exams_2days, max_exams_5day
     ws = wb.active
     bank_holidays = []
     row = 5
-
+    
     while True:
         name = ws[f"F{row}"].value
         date_cell = ws[f"G{row}"].value
